@@ -1,0 +1,28 @@
+{
+  "name": "mantle-audit-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "contracts"
+  ],
+  "scripts": {
+    "dev": "npm --workspace apps/web run dev",
+    "build": "npm --workspace apps/web run build",
+    "lint": "npm --workspaces --if-present run lint",
+    "typecheck": "npm --workspaces --if-present run typecheck",
+    "test": "npm --workspaces --if-present run test",
+    "test:coverage": "npm --workspaces --if-present run test:coverage",
+    "contracts:compile": "npm --workspace contracts run compile",
+    "contracts:test": "npm --workspace contracts run test",
+    "deploy:mantle": "npm --workspace contracts run deploy:mantle"
+  },
+  "overrides": {
+    "axios": "1.16.0",
+    "lodash": "4.18.1",
+    "postcss": "8.5.14"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
