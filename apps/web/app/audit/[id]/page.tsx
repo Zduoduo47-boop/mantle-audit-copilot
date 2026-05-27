@@ -65,14 +65,14 @@ export default function AuditDetailPage({ params }: { params: { id: string } }) 
                   </div>
                 </div>
               </div>
-              {record.onchain ? (
+              {record.txHash ? (
                 <a
-                  href={`${mantleSepolia.blockExplorers.default.url}/tx/${record.onchain.transactionHash}`}
+                  href={`${mantleSepolia.blockExplorers.default.url}/tx/${record.txHash}`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-4 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 hover:border-emerald-400"
                 >
-                  Proof of Audit token #{record.onchain.tokenId}
+                  Proof of Audit on Mantle Sepolia
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
               ) : null}

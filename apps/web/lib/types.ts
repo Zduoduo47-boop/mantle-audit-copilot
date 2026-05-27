@@ -61,5 +61,7 @@ export interface StoredAuditRecord {
   metadataUri: string;
   report: AuditReport;
   createdAt: string;
+  txHash?: `0x${string}`;
+  contractAddress?: `0x${string}`;
   onchain?: OnchainProof;
 }

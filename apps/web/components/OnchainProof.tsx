@@ -1,13 +1,12 @@
 "use client";
 
 import { ExternalLink, Link2, Loader2, ShieldCheck } from "lucide-react";
-import { useEffect, useMemo } from "react";
-import { parseEventLogs } from "viem";
+import { useEffect } from "react";
 import { useAccount, useChainId, useSwitchChain, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { auditProofAbi } from "@/lib/abi";
 import { mantleSepolia } from "@/lib/chains";
 import { shortHash } from "@/lib/hash";
-import type { OnchainProof as OnchainProofType, StoredAuditRecord } from "@/lib/types";
+import type { StoredAuditRecord } from "@/lib/types";
 
 const contractAddress = process.env.NEXT_PUBLIC_AUDIT_PROOF_ADDRESS as `0x${string}` | undefined;
 
@@ -17,51 +16,28 @@ function isAddress(value: string | undefined): value is `0x${string}` {
 
 export function OnchainProof({
   record,
-  onProofCreated
+  onMintSuccess
 }: {
   record: StoredAuditRecord;
-  onProofCreated: (proof: OnchainProofType) => void;
+  onMintSuccess: (txHash: `0x${string}`, contractAddress: `0x${string}`) => void;
 }) {
   const { isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const { writeContract, data: transactionHash, isPending, error } = useWriteContract();
-  const { data: receipt, isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
     hash: transactionHash
   });
   const hasContract = isAddress(contractAddress);
   const isWrongChain = chainId !== mantleSepolia.id;
 
-  const submittedEvent = useMemo(() => {
-    if (!receipt) {
-      return null;
-    }
-
-    try {
-      const [event] = parseEventLogs({
-        abi: auditProofAbi,
-        logs: receipt.logs,
-        eventName: "AuditSubmitted"
-      });
-      return event || null;
-    } catch {
-      return null;
-    }
-  }, [receipt]);
-
   useEffect(() => {
-    if (!isSuccess || !transactionHash || !hasContract || record.onchain) {
+    if (!isSuccess || !transactionHash || !hasContract || record.txHash) {
       return;
     }
 
-    const tokenId = submittedEvent?.args.auditId?.toString() || "pending";
-    onProofCreated({
-      tokenId,
-      transactionHash,
-      contractAddress,
-      chainId: mantleSepolia.id
-    });
-  }, [hasContract, isSuccess, onProofCreated, record.onchain, submittedEvent, transactionHash]);
+    onMintSuccess(transactionHash, contractAddress!);
+  }, [hasContract, isSuccess, onMintSuccess, record.txHash, transactionHash]);
 
   function submitProof() {
     if (!hasContract) {
@@ -84,10 +60,10 @@ export function OnchainProof({
           <Link2 className="h-5 w-5 text-mantle" aria-hidden="true" />
           <h2 className="text-base font-semibold">On-chain proof</h2>
         </div>
-        {record.onchain ? (
+        {record.txHash ? (
           <span className="inline-flex w-fit items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700">
             <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-            Minted #{record.onchain.tokenId}
+            Minted
           </span>
         ) : null}
       </div>
@@ -104,11 +80,11 @@ export function OnchainProof({
           </div>
         </div>
 
-        {record.onchain ? (
+        {record.txHash ? (
           <div className="grid gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
             <div className="font-semibold">Proof of Audit is recorded on Mantle Sepolia.</div>
             <a
-              href={`${mantleSepolia.blockExplorers.default.url}/tx/${record.onchain.transactionHash}`}
+              href={`${mantleSepolia.blockExplorers.default.url}/tx/${record.txHash}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 font-medium text-emerald-800 underline-offset-4 hover:underline"

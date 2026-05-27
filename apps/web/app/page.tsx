@@ -8,8 +8,8 @@ import { CodeInput } from "@/components/CodeInput";
 import { OnchainProof } from "@/components/OnchainProof";
 import { WalletConnect } from "@/components/WalletConnect";
 import { hashJson, hashText } from "@/lib/hash";
-import { saveAuditRecord } from "@/lib/storage";
-import type { AuditReport as AuditReportType, OnchainProof as OnchainProofType, StoredAuditRecord } from "@/lib/types";
+import { saveAuditRecord, updateAuditRecord } from "@/lib/storage";
+import type { AuditReport as AuditReportType, StoredAuditRecord } from "@/lib/types";
 
 const SAMPLE_CONTRACT = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
@@ -73,8 +73,8 @@ export default function Home() {
       const report = (await response.json()) as AuditReportType;
       const sourceHash = hashText(contractCode.trim());
       const reportHash = hashJson(report);
-      const id = reportHash.slice(2, 14);
-      const metadataUri = `${window.location.origin}/audit/${id}`;
+      const id = reportHash;
+      const metadataUri = `${window.location.origin}/audit/${encodeURIComponent(id)}`;
       const nextRecord: StoredAuditRecord = {
         id,
         contractName: report.contractName || contractName || "UntitledContract",
@@ -95,15 +95,16 @@ export default function Home() {
     }
   }, [contractCode, contractName]);
 
-  const updateProof = useCallback(
-    (proof: OnchainProofType) => {
+  const handleMintSuccess = useCallback(
+    (txHash: `0x${string}`, contractAddress: `0x${string}`) => {
       if (!record) {
         return;
       }
 
-      const nextRecord = { ...record, onchain: proof };
-      saveAuditRecord(nextRecord);
-      setRecord(nextRecord);
+      const updated = updateAuditRecord(record.id, { txHash, contractAddress });
+      if (updated) {
+        setRecord(updated);
+      }
     },
     [record]
   );
@@ -169,7 +170,7 @@ export default function Home() {
 
           {record ? (
             <>
-              <OnchainProof record={record} onProofCreated={updateProof} />
+              <OnchainProof record={record} onMintSuccess={handleMintSuccess} />
               <section className="rounded-lg border border-line bg-panel p-4 shadow-soft">
                 <div className="mb-3 flex items-center gap-2">
                   <ClipboardCheck className="h-5 w-5 text-mantle" aria-hidden="true" />

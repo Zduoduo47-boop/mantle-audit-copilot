@@ -1,31 +1,7 @@
 import type { StoredAuditRecord } from "@/lib/types";
 
-const STORAGE_KEY = "mantle-audit-copilot.records";
-
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-export function listAuditRecords(): StoredAuditRecord[] {
-  if (!canUseStorage()) {
-    return [];
-  }
-
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-export function getAuditRecord(id: string): StoredAuditRecord | null {
-  return listAuditRecords().find((record) => record.id === id) || null;
 }
 
 export function saveAuditRecord(record: StoredAuditRecord) {
@@ -33,6 +9,33 @@ export function saveAuditRecord(record: StoredAuditRecord) {
     return;
   }
 
-  const existing = listAuditRecords().filter((item) => item.id !== record.id);
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify([record, ...existing].slice(0, 20)));
+  window.localStorage.setItem(`mantle-audit:${record.id}`, JSON.stringify(record));
+}
+
+export function getAuditRecord(id: string): StoredAuditRecord | null {
+  if (!canUseStorage()) {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(`mantle-audit:${id}`);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as StoredAuditRecord;
+  } catch {
+    return null;
+  }
+}
+
+export function updateAuditRecord(id: string, patch: Partial<StoredAuditRecord>): StoredAuditRecord | null {
+  const existing = getAuditRecord(id);
+  if (!existing) {
+    return null;
+  }
+
+  const updated = { ...existing, ...patch, id };
+  saveAuditRecord(updated);
+  return updated;
 }
