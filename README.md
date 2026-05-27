@@ -1,52 +1,97 @@
 # Mantle Audit Copilot
 
-AI smart contract audit assistant for the Turing Test Hackathon 2026 Phase 2, AI DevTools track.
+Mantle Audit Copilot is an AI DevTool for Solidity audit reports and proof-of-audit on Mantle Sepolia.
 
-Mantle Audit Copilot helps builders review Solidity contracts before shipping on Mantle. It generates a structured AI audit report, highlights security risks, suggests Mantle-aware gas improvements, and mints a non-transferable Proof of Audit on Mantle Sepolia.
+It helps Mantle developers scan Solidity contracts, generate audit findings, compute source/report hashes, and record proof of audit on-chain.
 
 ## Live Demo
 
-**https://mantle-audit-copilot.netlify.app**
+- App: https://mantle-audit-copilot.netlify.app
+- Network: Mantle Sepolia Testnet
+- Chain ID: 5003
 
-## Network
-
-Mantle Sepolia Testnet (Chain ID: 5003)
-
-## Contract
+## Deployment
 
 | Item | Value |
 |------|-------|
+| Network | Mantle Sepolia Testnet |
+| Chain ID | `5003` |
 | Contract Address | `0xd038B95D09831Fe264F0e357Ff9B4B745C0daa1C` |
 | Demo Wallet | `0x5C198c7a84cC8bb46A5a39dcc6d661eFA941a50A` |
-| Example Transaction | [0x5fac69...1a57b](https://explorer.sepolia.mantle.xyz/tx/0x5fac6934a83d7c37c532d44b38badc6bb2a1c68cd153471ff63a7e2491d1a57b) |
+| Example Transaction | [View on Mantle Explorer](https://explorer.sepolia.mantle.xyz/tx/0x5fac6934a83d7c37c532d44b38badc6bb2a1c68cd153471ff63a7e2491d1a57b) |
 
-## Hackathon Fit
+## Features
 
-- Track: AI DevTools
-- Prompt match: smart gas optimisation tools and Mantle-specific audit assistants
-- Chain: Mantle Sepolia
+- Solidity contract input
+- Sample vulnerable contract
+- Local fallback audit engine
+- Risk score and categorized findings
+- Reentrancy, tx.origin, privileged operation, and gas optimization checks
+- Mantle deployment checklist
+- Source hash and report hash generation
+- Proof of audit recorded on Mantle Sepolia
+- Shareable local audit report page
+- Wallet connection through RainbowKit / wagmi
 
-## Core Flow
+## Mantle Integration
 
-1. Connect a wallet on Mantle Sepolia.
-2. Paste Solidity code or load the demo contract.
-3. Generate a structured audit report with risk score, findings, fixes, and Mantle checklist.
-4. Hash the source and report.
-5. Submit both hashes on-chain and mint a non-transferable Proof of Audit.
-6. Share the local report page at `/audit/:id` for demo review.
+Mantle Audit Copilot is built specifically for Mantle builders.
 
-## Mantle Touchpoints
+- Uses Mantle Sepolia Testnet
+- Records proof-of-audit transactions on Mantle
+- Uses Mantle chain ID `5003`
+- Includes a Mantle deployment checklist
+- Helps developers review contracts before deploying to Mantle
+- Stores source/report hashes on-chain for verifiable audit evidence
 
-- Mantle Sepolia is configured as the primary chain in wagmi and RainbowKit.
-- `MantleAuditProof.sol` stores source/report hashes and mints Proof of Audit SBTs.
-- The UI links transactions to the Mantle Sepolia explorer.
-- The report includes Mantle deployment checks such as L2 gas behavior, chain ID assumptions, bridge assumptions, and token decimal handling.
+## Demo Flow
 
-## AI Behavior
+1. Open the live demo.
+2. Connect MetaMask on Mantle Sepolia.
+3. Click `Sample` to load the demo vulnerable contract.
+4. Click `Run audit`.
+5. Review the risk score, security findings, gas suggestions, and Mantle checklist.
+6. Click the on-chain proof button.
+7. Confirm the MetaMask transaction.
+8. Open the Mantle Explorer transaction.
+9. Open the audit report page.
 
-The API route uses `OPENAI_API_KEY` when available. Without a key, it falls back to a deterministic local analyzer so the demo remains usable during judging.
+## Run Locally
 
-The report always includes this disclaimer: AI audit output is assistive and does not replace a professional security review.
+```bash
+git clone https://github.com/Zduoduo47-boop/mantle-audit-copilot.git
+cd mantle-audit-copilot
+
+# Install dependencies
+npm install
+
+# Run web dev server
+npm run dev
+```
+
+Then open: http://localhost:3000
+
+## Deploy Contract
+
+```bash
+cd contracts
+cp .env.example .env
+# Edit .env with your testnet private key
+
+npm install
+npx hardhat compile
+npx hardhat test
+npx hardhat run scripts/deploy.ts --network mantleSepolia
+```
+
+Required environment variables:
+
+```
+PRIVATE_KEY=your_testnet_deployer_private_key
+MANTLE_SEPOLIA_RPC_URL=https://rpc.sepolia.mantle.xyz
+```
+
+Do not commit your real `.env` file.
 
 ## Tech Stack
 
@@ -67,28 +112,10 @@ mantle-audit-copilot/
 │   ├── contracts/         # MantleAuditProof.sol
 │   ├── scripts/           # Deploy script
 │   └── test/              # Contract tests
-└── docs/                  # Pitch and demo script
+└── docs/                  # Pitch, demo script, deployment info
 ```
 
-## Local Setup
-
-```bash
-npm install
-npm run test
-npm run contracts:compile
-npm run dev
-```
-
-The web app runs at `http://localhost:3000` unless that port is already in use.
-
-## Environment
-
-Copy the examples before running:
-
-```bash
-cp apps/web/.env.example apps/web/.env.local
-cp contracts/.env.example contracts/.env
-```
+## Environment Variables
 
 ### Web (Netlify)
 
@@ -105,21 +132,10 @@ cp contracts/.env.example contracts/.env
 | `PRIVATE_KEY` | Wallet private key for deployment |
 | `MANTLE_SEPOLIA_RPC_URL` | Mantle Sepolia RPC endpoint |
 
-## Contract Commands
+## Disclaimer
 
-```bash
-npm --workspace contracts run compile
-npm --workspace contracts run test
-npm --workspace contracts run deploy:mantle
-```
+Mantle Audit Copilot provides assistive security feedback and does not replace a professional smart contract audit.
 
-The deployment script writes `contracts/deployments/mantleSepolia.json` and prints the `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` value needed by the frontend.
+## Track
 
-## Submission Docs
-
-- `docs/pitch.md` contains the project pitch.
-- `docs/demo-script.md` contains the 2-3 minute demo video script.
-
-## Safety Boundary
-
-This is a hackathon MVP. It stores only hashes and minimal metadata on-chain. It does not upload full source code or full reports to a permanent public store by default.
+AI DevTools — Mantle Turing Test Hackathon 2026

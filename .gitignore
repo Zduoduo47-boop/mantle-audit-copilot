@@ -13,4 +13,3 @@ typechain-types
 .env.production.local
 *.log
 contracts/deployments
-.env.example

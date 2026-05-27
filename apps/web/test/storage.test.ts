@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { getAuditRecord, listAuditRecords, saveAuditRecord } from "@/lib/storage";
+import { getAuditRecord, saveAuditRecord, updateAuditRecord } from "@/lib/storage";
 import type { StoredAuditRecord } from "@/lib/types";
 
 function makeRecord(id: string): StoredAuditRecord {
@@ -32,26 +32,44 @@ describe("audit storage", () => {
     window.localStorage.clear();
   });
 
-  it("saves, lists, and gets audit records", () => {
+  it("saves and gets audit records by id", () => {
     saveAuditRecord(makeRecord("a1"));
     saveAuditRecord(makeRecord("a2"));
 
-    expect(listAuditRecords().map((record) => record.id)).toEqual(["a2", "a1"]);
     expect(getAuditRecord("a1")?.contractName).toBe("Vault");
+    expect(getAuditRecord("a2")?.contractName).toBe("Vault");
     expect(getAuditRecord("missing")).toBeNull();
   });
 
-  it("replaces an existing record with the same id", () => {
+  it("overwrites an existing record with the same id", () => {
     saveAuditRecord(makeRecord("a1"));
     saveAuditRecord({ ...makeRecord("a1"), contractName: "UpdatedVault" });
 
-    expect(listAuditRecords()).toHaveLength(1);
     expect(getAuditRecord("a1")?.contractName).toBe("UpdatedVault");
   });
 
-  it("handles corrupted storage safely", () => {
-    window.localStorage.setItem("mantle-audit-copilot.records", "{bad json");
+  it("updates a record with partial patch", () => {
+    saveAuditRecord(makeRecord("a1"));
 
-    expect(listAuditRecords()).toEqual([]);
+    const updated = updateAuditRecord("a1", {
+      txHash: "0xabc123" as `0x${string}`,
+      contractAddress: "0xdef456" as `0x${string}`
+    });
+
+    expect(updated?.txHash).toBe("0xabc123");
+    expect(updated?.contractAddress).toBe("0xdef456");
+    expect(updated?.contractName).toBe("Vault");
+    expect(getAuditRecord("a1")?.txHash).toBe("0xabc123");
+  });
+
+  it("returns null when updating a missing record", () => {
+    const result = updateAuditRecord("missing", { txHash: "0xabc" as `0x${string}` });
+    expect(result).toBeNull();
+  });
+
+  it("handles corrupted storage safely", () => {
+    window.localStorage.setItem("mantle-audit:bad", "{bad json");
+
+    expect(getAuditRecord("bad")).toBeNull();
   });
 });
