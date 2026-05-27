@@ -4,14 +4,27 @@ AI smart contract audit assistant for the Turing Test Hackathon 2026 Phase 2, AI
 
 Mantle Audit Copilot helps builders review Solidity contracts before shipping on Mantle. It generates a structured AI audit report, highlights security risks, suggests Mantle-aware gas improvements, and mints a non-transferable Proof of Audit on Mantle Sepolia.
 
+## Live Demo
+
+**https://mantle-audit-copilot.netlify.app**
+
+## Network
+
+Mantle Sepolia Testnet (Chain ID: 5003)
+
+## Contract
+
+| Item | Value |
+|------|-------|
+| Contract Address | `0xd038B95D09831Fe264F0e357Ff9B4B745C0daa1C` |
+| Demo Wallet | `0x5C198c7a84cC8bb46A5a39dcc6d661eFA941a50A` |
+| Example Transaction | [0x5fac69...1a57b](https://explorer.sepolia.mantle.xyz/tx/0x5fac6934a83d7c37c532d44b38badc6bb2a1c68cd153471ff63a7e2491d1a57b) |
+
 ## Hackathon Fit
 
 - Track: AI DevTools
 - Prompt match: smart gas optimisation tools and Mantle-specific audit assistants
 - Chain: Mantle Sepolia
-- Demo: add the deployed frontend URL after deployment
-- Contract: add the Mantle Sepolia address after deployment
-- Example transaction: add the first `submitAudit` transaction after deployment
 
 ## Core Flow
 
@@ -35,6 +48,28 @@ The API route uses `OPENAI_API_KEY` when available. Without a key, it falls back
 
 The report always includes this disclaimer: AI audit output is assistive and does not replace a professional security review.
 
+## Tech Stack
+
+- **Frontend**: Next.js 16, React 18, Tailwind CSS
+- **Wallet**: RainbowKit, wagmi, viem
+- **Smart Contract**: Solidity 0.8.24, OpenZeppelin ERC721, Hardhat
+- **Audit Engine**: OpenAI (optional) + local deterministic fallback
+
+## Project Structure
+
+```
+mantle-audit-copilot/
+├── apps/web/              # Next.js frontend
+│   ├── app/               # Pages and API routes
+│   ├── components/        # React components
+│   └── lib/               # Utilities, types, audit engine
+├── contracts/             # Solidity contracts
+│   ├── contracts/         # MantleAuditProof.sol
+│   ├── scripts/           # Deploy script
+│   └── test/              # Contract tests
+└── docs/                  # Pitch and demo script
+```
+
 ## Local Setup
 
 ```bash
@@ -55,12 +90,20 @@ cp apps/web/.env.example apps/web/.env.local
 cp contracts/.env.example contracts/.env
 ```
 
-Set these values:
+### Web (Netlify)
 
-- `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
-- `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` after contract deployment
-- `OPENAI_API_KEY` only if you want live LLM output
-- `PRIVATE_KEY` only for deploying the contract
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` | Yes | Deployed contract address |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Recommended | WalletConnect project ID |
+| `OPENAI_API_KEY` | Optional | Enables AI-powered audits |
+
+### Contracts (local only)
+
+| Variable | Description |
+|----------|-------------|
+| `PRIVATE_KEY` | Wallet private key for deployment |
+| `MANTLE_SEPOLIA_RPC_URL` | Mantle Sepolia RPC endpoint |
 
 ## Contract Commands
 
@@ -72,16 +115,10 @@ npm --workspace contracts run deploy:mantle
 
 The deployment script writes `contracts/deployments/mantleSepolia.json` and prints the `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` value needed by the frontend.
 
-## Deployment
-
-See `docs/deployment.md` for the full contract and frontend deployment checklist. Actual Mantle Sepolia deployment requires a funded private key and must not be done with a committed secret.
-
 ## Submission Docs
 
-- `docs/architecture.md` includes the architecture diagram and data flow.
 - `docs/pitch.md` contains the project pitch.
 - `docs/demo-script.md` contains the 2-3 minute demo video script.
-- `docs/submission-checklist.md` contains the final hackathon submission checklist.
 
 ## Safety Boundary
 

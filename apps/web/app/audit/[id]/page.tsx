@@ -2,24 +2,33 @@
 
 import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuditReport } from "@/components/AuditReport";
 import { mantleSepolia } from "@/lib/chains";
 import { getAuditRecord } from "@/lib/storage";
 import type { StoredAuditRecord } from "@/lib/types";
 
-export default function AuditDetailPage({ params }: { params: { id: string } }) {
+export default function AuditDetailPage() {
+  const params = useParams();
+  const id = typeof params.id === "string" ? params.id : "";
+
   const [record, setRecord] = useState<StoredAuditRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    if (!id) {
+      setLoaded(true);
+      return;
+    }
+
     const timer = window.setTimeout(() => {
-      setRecord(getAuditRecord(params.id));
+      setRecord(getAuditRecord(id));
       setLoaded(true);
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [params.id]);
+  }, [id]);
 
   return (
     <main className="min-h-screen">
@@ -31,7 +40,7 @@ export default function AuditDetailPage({ params }: { params: { id: string } }) 
           </Link>
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
             <ShieldCheck className="h-4 w-4 text-mantle" aria-hidden="true" />
-            Audit #{params.id}
+            Audit #{id ? id.slice(0, 10) : ""}
           </div>
         </div>
       </header>
