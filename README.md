@@ -95,6 +95,16 @@ MANTLE_SEPOLIA_RPC_URL=https://rpc.sepolia.mantle.xyz
 
 Do not commit your real `.env` file.
 
+## AI Behavior
+
+The audit API always runs the deterministic local analyzer first.
+
+If `AI_PROVIDER=mimo` and `MIMO_API_KEY` is configured, the app calls MiMo through an OpenAI-compatible chat completions interface to enhance the audit report.
+
+If `AI_PROVIDER=openai` and `OPENAI_API_KEY` is configured, the app uses OpenAI instead.
+
+If the AI provider is unavailable, times out, or returns invalid JSON, the app automatically falls back to the local deterministic audit report. This keeps the demo stable during judging.
+
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React 18, Tailwind CSS
@@ -124,10 +134,14 @@ mantle-audit-copilot/
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` | Yes | Deployed contract address |
+| `NEXT_PUBLIC_MANTLE_SEPOLIA_RPC_URL` | Yes | Mantle Sepolia RPC endpoint |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Recommended | WalletConnect project ID |
-| `AI_PROVIDER` | Optional | `local`, `openai`, or `mimo` |
-| `OPENAI_API_KEY` | Optional | Enables OpenAI-enhanced audits |
-| `MIMO_API_KEY` | Optional | Enables MiMo-enhanced audits |
+| `AI_PROVIDER` | Optional | `local`, `mimo`, or `openai` |
+| `MIMO_API_KEY` | Optional | MiMo API key for AI-enhanced audits |
+| `MIMO_BASE_URL` | Optional | MiMo OpenAI-compatible base URL |
+| `MIMO_MODEL` | Optional | MiMo model name |
+| `OPENAI_API_KEY` | Optional | OpenAI API key |
+| `OPENAI_MODEL` | Optional | OpenAI model name |
 
 ### Contracts (local only)
 
