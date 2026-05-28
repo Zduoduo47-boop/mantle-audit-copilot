@@ -17,8 +17,8 @@ function getAIConfig(): AIConfig {
     return {
       provider: "mimo",
       apiKey: process.env.MIMO_API_KEY,
-      baseUrl: process.env.MIMO_BASE_URL || "https://api.xiaomimimo.com/v1",
-      model: process.env.MIMO_MODEL || "mimo-v2-pro"
+      baseUrl: process.env.MIMO_BASE_URL || "https://token-plan-cn.xiaomimimo.com/v1",
+      model: process.env.MIMO_MODEL || "mimo-v2.5-pro"
     };
   }
 
