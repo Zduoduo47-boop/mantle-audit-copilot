@@ -3,13 +3,15 @@
 import { ClipboardCheck, ExternalLink, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
+import { AgentCard } from "@/components/AgentCard";
 import { AuditReport } from "@/components/AuditReport";
 import { CodeInput } from "@/components/CodeInput";
 import { OnchainProof } from "@/components/OnchainProof";
 import { WalletConnect } from "@/components/WalletConnect";
 import { hashJson, hashText } from "@/lib/hash";
 import { saveAuditRecord, updateAuditRecord } from "@/lib/storage";
-import type { AuditReport as AuditReportType, StoredAuditRecord } from "@/lib/types";
+import type { AuditReport as AuditReportType, PublicAuditReport, StoredAuditRecord } from "@/lib/types";
+import { AGENT_IDENTITY } from "@/lib/types";
 
 const SAMPLE_CONTRACT = `// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
@@ -39,6 +41,46 @@ contract DemoVault {
     }
 }`;
 
+async function saveToPublicApi(record: StoredAuditRecord) {
+  const contractAddress = process.env.NEXT_PUBLIC_AUDIT_PROOF_ADDRESS as `0x${string}` | undefined;
+
+  const publicReport: PublicAuditReport = {
+    id: record.id,
+    contractName: record.contractName,
+    sourceHash: record.sourceHash,
+    reportHash: record.reportHash,
+    report: record.report,
+    chainId: 5003,
+    contractAddress: contractAddress ?? ("0x" as `0x${string}`),
+    proofStatus: "not_minted",
+    agentId: AGENT_IDENTITY.id,
+    agentName: AGENT_IDENTITY.name,
+    createdAt: record.createdAt
+  };
+
+  try {
+    await fetch("/api/reports", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(publicReport)
+    });
+  } catch {
+    // Public save is best-effort; localStorage is the fallback
+  }
+}
+
+async function updatePublicApi(id: string, patch: Partial<PublicAuditReport>) {
+  try {
+    await fetch(`/api/reports/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch)
+    });
+  } catch {
+    // Best-effort
+  }
+}
+
 export default function Home() {
   const [contractName, setContractName] = useState("DemoVault");
   const [contractCode, setContractCode] = useState(SAMPLE_CONTRACT);
@@ -46,7 +88,7 @@ export default function Home() {
   const [isAuditing, setIsAuditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const reportUrl = useMemo(() => (record ? `/audit/${record.id}` : null), [record]);
+  const reportUrl = useMemo(() => (record ? `/audit/${encodeURIComponent(record.id)}` : null), [record]);
 
   const runAudit = useCallback(async () => {
     setIsAuditing(true);
@@ -55,14 +97,8 @@ export default function Home() {
     try {
       const response = await fetch("/api/audit", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contractCode,
-          contractName,
-          targetChain: "Mantle Sepolia"
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contractCode, contractName, targetChain: "Mantle Sepolia" })
       });
 
       if (!response.ok) {
@@ -88,6 +124,7 @@ export default function Home() {
 
       saveAuditRecord(nextRecord);
       setRecord(nextRecord);
+      saveToPublicApi(nextRecord);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Audit failed.");
     } finally {
@@ -105,6 +142,12 @@ export default function Home() {
       if (updated) {
         setRecord(updated);
       }
+
+      updatePublicApi(record.id, {
+        txHash,
+        contractAddress,
+        proofStatus: "confirmed"
+      });
     },
     [record]
   );
@@ -119,7 +162,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold">Mantle Audit Copilot</h1>
-              <p className="text-sm text-slate-600">AI DevTools for Proof of Audit on Mantle Sepolia</p>
+              <p className="text-sm text-slate-600">Verifiable AI Security Agent for Mantle Builders</p>
             </div>
           </div>
           <WalletConnect />
@@ -128,6 +171,8 @@ export default function Home() {
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:px-6">
         <div className="grid gap-6">
+          <AgentCard />
+
           <CodeInput
             contractName={contractName}
             contractCode={contractCode}
@@ -162,8 +207,8 @@ export default function Home() {
                 <span className="rounded-md bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">Mantle Sepolia</span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span>Mode</span>
-                <span className="rounded-md bg-orange-50 px-2 py-1 font-semibold text-orange-700">MVP demo</span>
+                <span>Agent</span>
+                <span className="rounded-md bg-blue-50 px-2 py-1 font-semibold text-blue-700">{AGENT_IDENTITY.id}</span>
               </div>
             </div>
           </section>

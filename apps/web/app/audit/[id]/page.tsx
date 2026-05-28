@@ -4,16 +4,19 @@ import { ArrowLeft, ExternalLink, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AgentCard } from "@/components/AgentCard";
 import { AuditReport } from "@/components/AuditReport";
+import { ProofVerification } from "@/components/ProofVerification";
 import { mantleSepolia } from "@/lib/chains";
 import { getAuditRecord } from "@/lib/storage";
-import type { StoredAuditRecord } from "@/lib/types";
+import type { PublicAuditReport, StoredAuditRecord } from "@/lib/types";
 
 export default function AuditDetailPage() {
   const params = useParams();
   const id = typeof params.id === "string" ? params.id : "";
 
-  const [record, setRecord] = useState<StoredAuditRecord | null>(null);
+  const [publicReport, setPublicReport] = useState<PublicAuditReport | null>(null);
+  const [localRecord, setLocalRecord] = useState<StoredAuditRecord | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -22,13 +25,37 @@ export default function AuditDetailPage() {
       return;
     }
 
-    const timer = window.setTimeout(() => {
-      setRecord(getAuditRecord(id));
-      setLoaded(true);
-    }, 0);
+    let cancelled = false;
 
-    return () => window.clearTimeout(timer);
+    async function load() {
+      // Try public API first
+      try {
+        const res = await fetch(`/api/reports/${encodeURIComponent(id)}`);
+        if (res.ok && !cancelled) {
+          const data = (await res.json()) as PublicAuditReport;
+          setPublicReport(data);
+          setLoaded(true);
+          return;
+        }
+      } catch {
+        // API unavailable, fall through to localStorage
+      }
+
+      // Fallback to localStorage
+      if (!cancelled) {
+        setLocalRecord(getAuditRecord(id));
+        setLoaded(true);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  const record = publicReport ?? localRecord;
+  const txHash = publicReport?.txHash ?? localRecord?.txHash;
 
   return (
     <main className="min-h-screen">
@@ -50,13 +77,15 @@ export default function AuditDetailPage() {
           <section className="rounded-lg border border-line bg-panel p-6 shadow-soft">
             <h1 className="text-xl font-bold">Audit report not found</h1>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              This MVP stores generated reports in local browser storage. Open the report from the same browser used to create it, or deploy a metadata store for public sharing.
+              This report may have been created in a different browser session. Public reports are available via the API; local reports are stored in browser storage.
             </p>
           </section>
         ) : null}
 
         {record ? (
           <>
+            <AgentCard />
+
             <section className="rounded-lg border border-line bg-panel p-4 shadow-soft">
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
@@ -74,9 +103,9 @@ export default function AuditDetailPage() {
                   </div>
                 </div>
               </div>
-              {record.txHash ? (
+              {txHash ? (
                 <a
-                  href={`${mantleSepolia.blockExplorers.default.url}/tx/${record.txHash}`}
+                  href={`${mantleSepolia.blockExplorers.default.url}/tx/${txHash}`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-4 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-800 hover:border-emerald-400"
@@ -86,6 +115,9 @@ export default function AuditDetailPage() {
                 </a>
               ) : null}
             </section>
+
+            {publicReport ? <ProofVerification report={publicReport} /> : null}
+
             <AuditReport report={record.report} />
           </>
         ) : null}

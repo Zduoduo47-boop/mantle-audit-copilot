@@ -1,8 +1,10 @@
 # Mantle Audit Copilot
 
-Mantle Audit Copilot is an AI DevTool for Solidity audit reports and proof-of-audit on Mantle Sepolia.
+**Verifiable AI Security Agent for Mantle Builders.**
 
-It helps Mantle developers scan Solidity contracts, generate audit findings, compute source/report hashes, and record proof of audit on-chain.
+Mantle Audit Copilot turns Solidity pre-audits into verifiable AI agent decisions by generating security reports and anchoring source/report hashes on Mantle Sepolia. Each audit is treated as an AI agent decision with on-chain proof.
+
+Designed to be extended toward ERC-8004-style agent identity and reputation.
 
 ## Live Demo
 
@@ -22,15 +24,15 @@ It helps Mantle developers scan Solidity contracts, generate audit findings, com
 
 ## Features
 
-- Solidity contract input
-- Sample vulnerable contract
-- Local fallback audit engine
-- Risk score and categorized findings
-- Reentrancy, tx.origin, privileged operation, and gas optimization checks
-- Mantle deployment checklist
+- One-click sample contract loading
+- Audit findings with line numbers, code evidence, and fix suggestions
+- Mantle Deployment Readiness Score (0-100)
+- Auditor Agent Identity (MAC-001)
+- MiMo/OpenAI AI-enhanced mode with local deterministic fallback
+- Public audit report links (cross-browser accessible)
+- Proof Verification showing verified on-chain status
 - Source hash and report hash generation
-- Proof of audit recorded on Mantle Sepolia
-- Shareable local audit report page
+- Proof of Audit SBT recorded on Mantle Sepolia
 - Wallet connection through RainbowKit / wagmi
 
 ## Mantle Integration
@@ -98,7 +100,7 @@ Do not commit your real `.env` file.
 - **Frontend**: Next.js 16, React 18, Tailwind CSS
 - **Wallet**: RainbowKit, wagmi, viem
 - **Smart Contract**: Solidity 0.8.24, OpenZeppelin ERC721, Hardhat
-- **Audit Engine**: OpenAI (optional) + local deterministic fallback
+- **Audit Engine**: MiMo / OpenAI (optional) + local deterministic fallback
 
 ## Project Structure
 
@@ -123,7 +125,9 @@ mantle-audit-copilot/
 |----------|----------|-------------|
 | `NEXT_PUBLIC_AUDIT_PROOF_ADDRESS` | Yes | Deployed contract address |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Recommended | WalletConnect project ID |
-| `OPENAI_API_KEY` | Optional | Enables AI-powered audits |
+| `AI_PROVIDER` | Optional | `local`, `openai`, or `mimo` |
+| `OPENAI_API_KEY` | Optional | Enables OpenAI-enhanced audits |
+| `MIMO_API_KEY` | Optional | Enables MiMo-enhanced audits |
 
 ### Contracts (local only)
 

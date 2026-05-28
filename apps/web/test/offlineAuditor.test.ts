@@ -26,9 +26,12 @@ describe("analyzeContractLocally", () => {
     });
 
     expect(report.findings.some((finding) => finding.severity === "High")).toBe(true);
-    expect(report.findings.map((finding) => finding.id)).toContain("F-001");
-    expect(report.findings.map((finding) => finding.id)).toContain("F-002");
+    expect(report.findings.map((finding) => finding.id)).toContain("REENTRANCY_EXTERNAL_CALL");
+    expect(report.findings.map((finding) => finding.id)).toContain("TX_ORIGIN_AUTH");
     expect(report.disclaimer).toBe(DISCLAIMER);
+    expect(report.mantleReadiness).toBeDefined();
+    expect(report.mantleReadiness.score).toBeLessThan(100);
+    expect(report.agentId).toBe("MAC-001");
   });
 
   it("returns Mantle checklist and gas suggestions for demo completeness", () => {
@@ -68,10 +71,10 @@ describe("analyzeContractLocally", () => {
     });
 
     expect(report.findings.map((finding) => finding.id)).toEqual(
-      expect.arrayContaining(["F-003", "F-004", "F-005", "F-006", "F-007"])
+      expect.arrayContaining(["DELEGATECALL", "SELFDESTRUCT", "TIMESTAMP_DEPENDENCY", "UNBOUNDED_LOOP", "MISSING_EVENTS"])
     );
     expect(report.gasOptimizations.map((item) => item.id)).toEqual(
-      expect.arrayContaining(["G-001", "G-002", "G-004"])
+      expect.arrayContaining(["GAS_CALLDATA", "GAS_BOUNDED_LOOPS", "GAS_IMMUTABLE"])
     );
     expect(report.mantleChecklist.some((item) => item.status === "Needs Review")).toBe(true);
   });
@@ -88,8 +91,10 @@ describe("analyzeContractLocally", () => {
         }`
     });
 
-    expect(report.findings[0].id).toBe("F-000");
-    expect(report.gasOptimizations[0].id).toBe("G-000");
+    expect(report.findings[0].id).toBe("NO_ISSUES");
+    expect(report.gasOptimizations[0].id).toBe("GAS_NONE");
     expect(report.riskScore).toBe(12);
+    expect(report.mantleReadiness.score).toBe(100);
+    expect(report.mantleReadiness.status).toBe("Ready with caution");
   });
 });
