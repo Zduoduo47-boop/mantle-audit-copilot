@@ -52,7 +52,7 @@ async function callOpenAICompatible(
   const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -61,13 +61,19 @@ async function callOpenAICompatible(
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.2,
-        response_format: { type: "json_object" }
+        temperature: 0.2
       }),
       signal: controller.signal
     });
 
     if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      console.warn("AI provider failed", {
+        status: response.status,
+        providerBaseUrl: baseUrl,
+        model,
+        errorText
+      });
       return null;
     }
 
@@ -79,7 +85,8 @@ async function callOpenAICompatible(
     }
 
     return JSON.parse(cleanJsonContent(content));
-  } catch {
+  } catch (error) {
+    console.warn("AI provider call threw:", error);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -107,8 +114,7 @@ function mergeEnhancement(localReport: AuditReport, enhancement: Record<string, 
     mantleReadiness: {
       ...localReport.mantleReadiness,
       recommendation: (enhancement.mantleRecommendation as string) || localReport.mantleReadiness.recommendation
-    },
-    auditMode: "ai-enhanced"
+    }
   };
 }
 
@@ -119,22 +125,30 @@ export async function enhanceAudit(
   const config = getAIConfig();
 
   if (config.provider === "local" || !config.apiKey) {
-    return localReport;
+    return {
+      ...localReport,
+      auditMode: "deterministic",
+      model: "local-deterministic-auditor"
+    };
   }
 
   const messages = buildEnhancementPrompt(input, localReport);
   const enhancement = await callOpenAICompatible(config.baseUrl!, config.apiKey, config.model!, messages);
 
   if (!enhancement) {
-    return localReport;
+    return {
+      ...localReport,
+      auditMode: "deterministic",
+      model: `local-deterministic-auditor (${config.provider} unavailable)`
+    };
   }
 
-  return mergeEnhancement(localReport, enhancement);
-}
-
-export function getProviderName(): string {
-  const config = getAIConfig();
-  if (config.provider === "mimo") return "MiMo";
-  if (config.provider === "openai") return "OpenAI";
-  return "local";
+  return {
+    ...mergeEnhancement(localReport, enhancement),
+    auditMode: "ai-enhanced",
+    model:
+      config.provider === "mimo"
+        ? `MiMo:${config.model}`
+        : `OpenAI:${config.model}`
+  };
 }

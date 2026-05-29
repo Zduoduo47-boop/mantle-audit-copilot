@@ -101,6 +101,14 @@ export default function AuditDetailPage() {
                     <span className="text-slate-500">Report hash </span>
                     <code className="break-all font-mono text-xs">{record.reportHash}</code>
                   </div>
+                  <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                    <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${record.report.auditMode === "ai-enhanced" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
+                      {record.report.auditMode === "ai-enhanced" ? "AI Enhanced" : "Local fallback"}
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500">
+                      {record.report.model}
+                    </span>
+                  </div>
                 </div>
               </div>
               {txHash ? (

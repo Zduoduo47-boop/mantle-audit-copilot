@@ -45,6 +45,15 @@ export function AuditReport({ report }: { report: AuditReportType }) {
       </div>
 
       <div className="grid gap-5 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${report.auditMode === "ai-enhanced" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-700"}`}>
+            {report.auditMode === "ai-enhanced" ? "AI Mode: Enhanced" : "AI Mode: Local fallback"}
+          </span>
+          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-500">
+            {report.model}
+          </span>
+        </div>
+
         <p className="text-sm leading-6 text-slate-700">{report.summary}</p>
 
         {report.mantleReadiness ? (
